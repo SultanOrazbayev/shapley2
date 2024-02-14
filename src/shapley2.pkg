@@ -1,0 +1,7 @@
+v 3
+
+d shapley2: additive decomposition of estimation statistics
+d Distribution-Date: 2024-02-13
+
+f shapley2.ado
+f shapley2.hlp
