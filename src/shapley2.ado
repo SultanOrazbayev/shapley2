@@ -381,14 +381,3 @@ ereturn local estat_cmd="shapley2"
 
 }
 end
-
-********************
-*!
-*!--------------------- VERSION HISTORY -------------------
-*! Version 1.5: It is now possible to use f. and l. factor variables as dependent variables
-*! Version 1.4: Small bugfix: sometimes the program did not execute in protected working directories. Change does not affect result.
-*! Version 1.3: Small bugfix: shapley2 did not work with oprobit. The fix does not affect the results. 
-*! Version 1.2: Change in the computation, now closer to similar routines. Bugfix: now accepts very long group-statements
-*! Version 1.1: Bugfix to ensure no changes are made to the current database. 
-*! Version 1.0: First release on 06nov2012
-
