@@ -1,5 +1,5 @@
 capture program drop shapley2 
-*!version 1.5 10jun15 -  F. Chavez Juarez
+*!version 1.6 2024-02-27
 program define shapley2 , eclass 
 version 9.2
 syntax [anything] , stat(str) [Command(str) Indepvars(str) Depvars(str) GRoup(str) MEMory FORCE Noisily]
