@@ -43,6 +43,17 @@ if("`indepvars'"==""){
 			}
 		}
 	}
+
+	// if the original command had an if condition, use this to recover it
+	local if_condition: regexmatch "`e(cmdline)'" " (if .+),?"
+	if `if_condition'!=0{
+		// there was an if condition used, so recover it
+		local if_condition: regexs 1
+	}
+	else{
+		// store an empty string which will not impact the estimation commands
+		local if_condition ""
+	}
 	
 	// CHECK THAT NO FACTOR VARIABLES ARE USED
 	local cmdline=e(cmdline)
@@ -132,7 +143,7 @@ if("`group'"!=""){ // this is the algorithm for the group specific shapley value
 			//di "`thisvars'"
 			
 			
-			`noisily' `command' `depvar' `thisvars' if _mysample
+			`noisily' `command' `depvar' `thisvars' `if_condition'
 			matrix combinations[`i',`numcols']=e(`stat')
 			
 		}
@@ -193,7 +204,7 @@ if(2^`K'<=c(matsize)){
 					}
 				}
 			//di "`thisvars'"
-			`noisily' `command' `depvar' `thisvars' if _mysample
+			`noisily' `command' `depvar' `thisvars' `if_condition'
 			matrix combinations[`i',`numcols']=e(`stat')
 			
 		}
