@@ -11,14 +11,12 @@ if(_rc==0){
 	exit
 	}
 qui{
-tempfile orgdb temp
-save `orgdb'
+	// create local macros for temporary files
+	tempfile orgdb temp
+	// store a copy of the original data
+	save `orgdb'
 
 est store myreg
-//keep if e(sample)
-gen _mysample=e(sample)
-tempfile usedb
-save `usedb'
 
 local full=e(`stat')
 
@@ -222,7 +220,7 @@ else{ // if the matsize is to big
 		capture set mem `i'm
 		local i=round((`i')*0.9)
 		}
-		use `usedb'
+		use `orgdb'
 		}
 
 
@@ -256,7 +254,7 @@ else{ // if the matsize is to big
 	
 	//di "`thisvars'"
 	preserve
-	use `usedb', clear
+	use `orgdb', clear
 	di "`command' `depvar' `thisvars'"
 	qui: `command' `depvar' `thisvars'
 	restore
