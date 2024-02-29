@@ -255,8 +255,8 @@ else{ // if the matsize is to big
 	//di "`thisvars'"
 	preserve
 	use `orgdb', clear
-	di "`command' `depvar' `thisvars'"
-	qui: `command' `depvar' `thisvars'
+	di "`command' `depvar' `thisvars' `if_condition'"
+	qui: `command' `depvar' `thisvars' `if_condition'
 	restore
 	
 	qui: replace result=e(`stat') in `i'/`i'
