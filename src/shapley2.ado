@@ -94,61 +94,63 @@ qui{
 		}
 		
 		preserve
-				drop _all
-				set obs 2
-				forvalues j=1/`g'{
-					gen _group`j'=1 in 1/1
-					replace _group`j'=0 in 2/2
-					}
-				fillin _group*
-				
-				local allvars ""
-				forvalues j=1/`g'{
-					foreach var of local group`j'{
-						gen `var'=_group`j'
-						local allvars "`allvars' `var'"
-					}
+
+			drop _all
+			set obs 2
+			forvalues j=1/`g'{
+				gen _group`j'=1 in 1/1
+				replace _group`j'=0 in 2/2
+			}
+			fillin _group*
+			
+			local allvars ""
+			forvalues j=1/`g'{
+				foreach var of local group`j'{
+					gen `var'=_group`j'
+					local allvars "`allvars' `var'"
 				}
-				
-				drop _fillin
-				gen result=.
-				mkmat * , matrix(combinations) 
-				matrix list combinations
-				restore
+			}
+			
+			drop _fillin
+			gen result=.
+			mkmat * , matrix(combinations) 
+			matrix list combinations
+
+		restore
 		
 
-			local numcomb=rowsof(combinations)
-			local numcols=colsof(combinations)
+		local numcomb=rowsof(combinations)
+		local numcols=colsof(combinations)
 
 			
-			matrix combinations[1,`numcols']=0
+		matrix combinations[1,`numcols']=0
 				
-			forvalues i=2/`numcomb'{
+		forvalues i=2/`numcomb'{
 			local thisvars=""
-				foreach var of local allvars{
+			foreach var of local allvars{
+				
+				matrix mymat=combinations[`i',"`var'"]
+				local test=mymat[1,1]
+				
+				if(`test'==1){
 					
-					matrix mymat=combinations[`i',"`var'"]
-					local test=mymat[1,1]
+					local thisvars "`thisvars' `var'"
 					
-					if(`test'==1){
-						
-						local thisvars "`thisvars' `var'"
-						
-						}
-					}
-				//di "`thisvars'"
-				
-				
-				`noisily' `command' `depvar' `thisvars' `if_condition'
-				matrix combinations[`i',`numcols']=e(`stat')
-				
+				}
 			}
-			matrix list combinations
-			preserve
-			drop _all
-			matrix list combinations
-			svmat combinations,names(col) 
+			//di "`thisvars'"
+				
+				
+			`noisily' `command' `depvar' `thisvars' `if_condition'
+			matrix combinations[`i',`numcols']=e(`stat')
+				
+		}
 
+		matrix list combinations
+		preserve
+		drop _all
+		matrix list combinations
+		svmat combinations,names(col) 
 
 	}
 	else{ 
@@ -169,46 +171,49 @@ qui{
 
 		if(2^`K'<=c(matsize)){
 
-				preserve
-					drop _all
-					set obs 2
+			preserve
 
-					foreach var of local indepvars {
-						gen `var'=1 in 1/1
-						replace `var'=0 in 2/2
-						}
-						
-					fillin `indepvars'
-					drop _fillin
-					gen result=.
-					mkmat `indepvars' result , matrix(combinations) 
-					matrix list combinations
-				restore
-
-				local numcomb=rowsof(combinations)
-				local numcols=colsof(combinations)
-
-				//di as error "I have to perform `numcomb' regressions"
-				matrix combinations[1,`numcols']=0
-				forvalues i=2/`numcomb'{
-				local thisvars=""
-					foreach var of local indepvars{
-						matrix mymat=combinations[`i',"`var'"]
-						local test=mymat[1,1]
-						
-						if(`test'==1){
-							local thisvars "`thisvars' `var'"
-							}
-						}
-					//di "`thisvars'"
-					`noisily' `command' `depvar' `thisvars' `if_condition'
-					matrix combinations[`i',`numcols']=e(`stat')
-					
-				}
-				preserve
 				drop _all
+				set obs 2
+
+				foreach var of local indepvars {
+					gen `var'=1 in 1/1
+					replace `var'=0 in 2/2
+				}
+					
+				fillin `indepvars'
+				drop _fillin
+				gen result=.
+				mkmat `indepvars' result , matrix(combinations) 
 				matrix list combinations
-				svmat combinations,names(col) 
+
+			restore
+
+			local numcomb=rowsof(combinations)
+			local numcols=colsof(combinations)
+
+			//di as error "I have to perform `numcomb' regressions"
+			matrix combinations[1,`numcols']=0
+			forvalues i=2/`numcomb'{
+				local thisvars=""
+				foreach var of local indepvars{
+					matrix mymat=combinations[`i',"`var'"]
+					local test=mymat[1,1]
+					
+					if(`test'==1){
+						local thisvars "`thisvars' `var'"
+						}
+				}
+				//di "`thisvars'"
+				`noisily' `command' `depvar' `thisvars' `if_condition'
+				matrix combinations[`i',`numcols']=e(`stat')
+			}
+
+			preserve
+			drop _all
+			matrix list combinations
+			svmat combinations,names(col)
+
 		}
 		else{
 			// if the matsize is to big
@@ -221,7 +226,7 @@ qui{
 				local i=round((`i')*0.9)
 				}
 				use `orgdb'
-				}
+			}
 
 
 			di as error "Slow algorithm chosen. Try to increase matsize to enable the faster algorithm"
@@ -237,26 +242,26 @@ qui{
 			drop _fillin
 			gen result=.
 			
-			
-			
 			local numcomb=_N
 			
 			di "`numcomb' combinations!"
 			qui:replace result=0 in 1/1
 			forvalues i=2/`numcomb'{
 				local thisvars=""
-					foreach var of local indepvars{
-						local test=`var' in `i'/`i'
-						if(`test'==1){
-							local thisvars "`thisvars' `var'"
-						}
+				foreach var of local indepvars{
+					local test=`var' in `i'/`i'
+					if(`test'==1){
+						local thisvars "`thisvars' `var'"
 					}
+				}
 			
 				//di "`thisvars'"
 				preserve
-				use `orgdb', clear
-				di "`command' `depvar' `thisvars' `if_condition'"
-				qui: `command' `depvar' `thisvars' `if_condition'
+
+					use `orgdb', clear
+					di "`command' `depvar' `thisvars' `if_condition'"
+					qui: `command' `depvar' `thisvars' `if_condition'
+
 				restore
 				
 				qui: replace result=e(`stat') in `i'/`i'
@@ -271,7 +276,7 @@ qui{
 	if("`group'"!=""){
 		foreach var of varlist _group*{
 			local IVlist "`IVlist' `var'"
-			}
+		}
 		egen t=rowtotal(_group*)
 		sum t
 		local Kgroup=r(max)
@@ -305,8 +310,6 @@ qui{
 		gen _weight = round(exp(lnfactorial(abs(t))),1) * round(exp(lnfactorial(`K'-abs(t)-1)),1)
 		drop t
 
-
-
 		save `temp', replace
 
 		matrix newshapley=[.]
@@ -323,7 +326,7 @@ qui{
 
 		matrix shapley=newshapley
 		matrix shapley_rel=shapley/`full'
-			
+
 	}
 
 	// GENERATE THE NORMALIZED VERSION
