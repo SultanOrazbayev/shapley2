@@ -11,7 +11,7 @@ request here: https://github.com/SultanOrazbayev/shapley2.
 
 Citation:
 
-Florian Chavez Juarez and Sultan Orazbayev, 2023. "SHAPLEY2: Stata module to compute additive decomposition of estimation statistics by regressors or groups of regressors," Statistical Software Components S457543, Boston College Department of Economics.
+Florian Chavez Juarez and Sultan Orazbayev, 2023. "SHAPLEY2: Stata module to compute additive decomposition of estimation statistics by regressors or groups of regressors".
 
 
 # Installation
