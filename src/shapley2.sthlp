@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-Help for {hi:shapley2} {right:Version 1.5}
+Help for {hi:shapley2} {right:Version 1.7}
 {hline}
 
 {title: Computing the Shapley values after a regression command}
@@ -111,24 +111,38 @@ this is an abbreviated version to compute the shapley value. The numerical diffe
 
 
 {title:Known issues}
+
 {p 4 6 2} - The program has been tested on OLS, probit, logit and ordered logit model. It is supposed to work also for other models, as long as there is only one parameter by regressor (e.g. for mlogit the 
 method is not defined and the program will not work.}
 
 {p 4 6 2} - Factor variables ({help  fvvarlist}) such as i.var are currently not (yet) supported. F. and l. factor variables for the dependent variable are supported, but be careful and double check 
 with a manually created variable. 
 
-{p 4 6 2} - If you find another issue, please send me an email indicating the problem. 
+{p 4 6 2} - Currently, only the "absorb" option of "reghdfe" is taken into
+consideration. If your estimation statistic is sensitive to the options, raise
+an issue on the GitHub repository: https://github.com/SultanOrazbayev/shapley2.
+
+{p 4 6 2} - If you find another issue, please raise the issue on the GitHub
+repository: https://github.com/SultanOrazbayev/shapley2.
 
 {title:Acknowledgements}
-{p 4 6 2} I would like to thank Philippe Jacquart, Lian Yujun, Sultan Orazbayev, Marcos Robles and Ahmed Abdalla for indicating small bugs in the program and the documentation. 
+
+{p 4 6 2} The authors would like to thank Philippe Jacquart, Lian Yujun, Marcos Robles and Ahmed Abdalla for indicating small bugs in the program and the documentation. 
 
 {title:Alternatives}
+
 {p 4 6 2} shapley2 is not the only package allowing to compute the Shapley value. Alternatives include
 	'shapley', 'rego' (available at {browse "http://www.uni-leipzig.de/~rego/"}), 'shapleyx', 'adecompt' 
 
-{title:Author}
+{title:Authors}
 
 {p 4 4 2} Florian Wendelspiess Chavez Juarez. CIDE, Mexico City.  {browse "mailto:florian@chavezjuarez.com":florian@chavezjuarez.com}
+{p 4 4 2} Sultan Orazbayev.  {browse "mailto:contact@econpoint.com":contact@econpoint.com} 
+
+{p 4 4 2} Note: the original package was developed by Florian Wendelspiess Chavez Juarez.
+Starting with version 1.6, maintenance of the package is done by Sultan Orazbayev,
+please go to the GitHub repository https://github.com/SultanOrazbayev/shapley2.
 
 {title:References}
+
 {p 4 4 2} Shorrocks, Anthony. "Inequality Decomposition by Factor Components", {it:Econometrica}, Vol. 50, No. 1 (Jan., 1982), pp. 193-211. Available at: {browse "http://www.jstor.org/stable/1912537":http://www.jstor.org/stable/1912537}
