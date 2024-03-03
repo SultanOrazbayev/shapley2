@@ -41,7 +41,7 @@ qui{
 	}
 
 	// if the original command had an if condition, use this to recover it
-	local if_condition: regexmatch "`e(cmdline)'" " (if .+),?"
+	local if_condition: regexmatch "`e(cmdline)'" " (if [^,]+),?"
 	if `if_condition'!=0{
 		// there was an if condition used, so recover it
 		local if_condition: regexs 1
@@ -186,6 +186,7 @@ qui{
 				// NOTE that right now all options apart from absorb are ignored
 				local include_absorbed = combinations[`i', "absorbed"]
 				if `include_absorbed'==1{
+					
 					`noisily' `command' `depvar' `thisvars' `if_condition', absorb("`absorbed_FEs'")
 				}
 				else{
@@ -405,7 +406,7 @@ if("`group'"!=""){
 			_col(40) "{c |}" //as result %6.5f _col(42) el(result,3,`i') as text _col(55) "{c |}" _col(57) as result %6.2f 100*el(result,4,`i') as text " %"
 		}		
 		//now report the contribution of the absorbed FEs, they should be in the first col since they correspond to group0
-		local varname="Group absorbed FEs" 
+		local varname="Absorb. FEs" 
 		di as text "`varname'" _col(12) "{c |}" as result %6.5f _col(15) el(result, 1, 1) as text _col(28) "{c |}" _col(31) as result %6.2f 100*el(result, 2, 1) as text " %" ///
 		_col(40) "{c |}" //as result %6.5f _col(42) el(result,3,`i') as text _col(55) "{c |}" _col(57) as result %6.2f 100*el(result,4,`i') as text " %"
 
