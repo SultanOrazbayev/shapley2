@@ -120,10 +120,10 @@ with a manually created variable.
 
 {p 4 6 2} - Currently, only the "absorb" option of "reghdfe" is taken into
 consideration. If your estimation statistic is sensitive to the options, raise
-an issue on the GitHub repository: https://github.com/SultanOrazbayev/shapley2.
+an issue on the GitHub repository: {browse "https://github.com/SultanOrazbayev/shapley2"}.
 
 {p 4 6 2} - If you find another issue, please raise the issue on the GitHub
-repository: https://github.com/SultanOrazbayev/shapley2.
+repository: {browse "https://github.com/SultanOrazbayev/shapley2"}.
 
 {title:Acknowledgements}
 
@@ -137,11 +137,10 @@ repository: https://github.com/SultanOrazbayev/shapley2.
 {title:Authors}
 
 {p 4 4 2} Florian Wendelspiess Chavez Juarez. CIDE, Mexico City.  {browse "mailto:florian@chavezjuarez.com":florian@chavezjuarez.com}
-{p 4 4 2} Sultan Orazbayev.  {browse "mailto:contact@econpoint.com":contact@econpoint.com} 
-
+{p 4 4 2} Sultan Orazbayev.  {browse "mailto:contact@econpoint.com":contact@econpoint.com}
 {p 4 4 2} Note: the original package was developed by Florian Wendelspiess Chavez Juarez.
 Starting with version 1.6, maintenance of the package is done by Sultan Orazbayev,
-please go to the GitHub repository https://github.com/SultanOrazbayev/shapley2.
+please go to the GitHub repository {browse "https://github.com/SultanOrazbayev/shapley2"}.
 
 {title:References}
 
