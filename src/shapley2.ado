@@ -425,18 +425,32 @@ qui{
 
 		save `temp', replace
 
-		matrix newshapley=[.]
-		foreach var of local indepvars{
-			local i=subinstr("`indepvars'","`var'","",1)
-			reshape wide result _weight, i(`i') j(`var')
-			gen _diff = result1-result0
-			sum _diff [iweight = _weight1]
-			use `temp',clear
-			
-			matrix newshapley = (newshapley \ r(mean))
+		if "`absorbed_FEs'"==""{
+			// no absorption, so use the original logic from v1.5
+			matrix newshapley=[.]
+			foreach var of local indepvars{
+				local i=subinstr("`indepvars'","`var'","",1)
+				reshape wide result _weight, i(`i') j(`var')
+				gen _diff = result1-result0
+				sum _diff [iweight = _weight1]
+				use `temp',clear
+				
+				matrix newshapley = (newshapley \ r(mean))
+			}
 		}
+		else{
 
-		if "`absorbed_FEs'"!=""{
+			matrix newshapley=[.]
+			foreach var of local indepvars{
+				local i=subinstr("`indepvars'","`var'","",1)
+				reshape wide result _weight, i(`i' absorbed) j(`var')
+				gen _diff = result1-result0
+				sum _diff [iweight = _weight1]
+				use `temp',clear
+				
+				matrix newshapley = (newshapley \ r(mean))
+			}
+
 			// add the last row for absorbed FEs
 			reshape wide result _weight, i(`indepvars') j(absorbed)
 			gen _diff = result1-result0
@@ -444,6 +458,7 @@ qui{
 			use `temp',clear
 			matrix newshapley = (newshapley \ r(mean))
 		}
+
 		matrix newshapley = newshapley[2...,1]
 
 		matrix shapley=newshapley
