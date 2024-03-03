@@ -193,7 +193,7 @@ qui{
 					`noisily' `command' `depvar' `thisvars' `if_condition'
 				}
 
-			}	
+			}
 
 			matrix combinations[`i',`numcols']=e(`stat')
 				
@@ -209,6 +209,28 @@ qui{
 	else{ 
 		// no group variable, hence use all indepvars individually
 		local K=wordcount("`indepvars'")
+
+		//special treatment for the reghdfe command's absorb option
+		// will treat the absorbed FEs as a separate variable
+		if "`command'"=="reghdfe"{
+			local absorbed_FEs: regexmatch "`e(cmdline)'" ",.*a[b]*[s]*[o]*[r]*[b]*\(([^\)]*)\)"
+			if `absorbed_FEs'!=0{
+				// there was an absorbed option provided, so recover it
+				local absorbed_FEs: regexs 1
+				local K=`K'+1
+			}
+			else{
+				// no absorbed option provided, store empty string for absorbed FEs
+				local absorbed_FEs ""
+			}
+		}
+		else{
+			// store an empty sting to simplify conditional logic below (if this local
+			// macro is an empty string, then can execute simple command, without
+			// any absorp options)
+			local absorbed_FEs ""	
+		}
+
 
 		if(`K'>20 & "`force'"==""){
 			local runs=2^`K'
@@ -233,11 +255,21 @@ qui{
 					gen `var'=1 in 1/1
 					replace `var'=0 in 2/2
 				}
+
+				if "`absorbed_FEs'"!=""{
+					gen absorbed=1 in 1/1
+					replace absorbed=0 in 2/2
+					fillin `indepvars' absorbed
+				}
+				else{
+					// fill in using only indepvars
+					fillin `indepvars'
+				}
 					
-				fillin `indepvars'
 				drop _fillin
 				gen result=.
-				mkmat `indepvars' result , matrix(combinations) 
+
+				mkmat *, matrix(combinations) 
 				matrix list combinations
 
 			restore
@@ -257,8 +289,26 @@ qui{
 						local thisvars "`thisvars' `var'"
 						}
 				}
-				//di "`thisvars'"
-				`noisily' `command' `depvar' `thisvars' `if_condition'
+		
+				if "`absorbed_FEs'"==""{
+					// can assume that no absorption treatment is needed, so use the
+					// approach used in shapley version 1.5
+					`noisily' `command' `depvar' `thisvars' `if_condition'
+				}
+				else{
+					// we have some absorption logic to incorporate, so need to
+					// check if the command should include the absorbed FEs or not
+					// NOTE that right now all options apart from absorb are ignored
+					local include_absorbed = combinations[`i', "absorbed"]
+					if `include_absorbed'==1{
+						
+						`noisily' `command' `depvar' `thisvars' `if_condition', absorb("`absorbed_FEs'")
+					}
+					else{
+						`noisily' `command' `depvar' `thisvars' `if_condition'
+					}
+
+				}
 				matrix combinations[`i',`numcols']=e(`stat')
 			}
 
@@ -270,6 +320,11 @@ qui{
 		}
 		else{
 			// if the matsize is to big
+
+			if "`absorbed_FEs'"!=""{
+				di as error "Slow algorithm with absorbption is not supported."
+				exit
+			}
 
 			if("`mem'"=="mem"){
 				clear
@@ -357,7 +412,13 @@ qui{
 	} 
 	else{
 
-		egen t=rowtotal(`indepvars')
+		if "`absorbed_FEs'"==""{
+			// no absorption needed, so use the original logic from v1.5
+			egen t=rowtotal(`indepvars')
+		}
+		else{
+			egen t=rowtotal(`indepvars' absorbed)
+		}
 		replace t=t-1
 		gen _weight = round(exp(lnfactorial(abs(t))),1) * round(exp(lnfactorial(`K'-abs(t)-1)),1)
 		drop t
@@ -372,6 +433,15 @@ qui{
 			sum _diff [iweight = _weight1]
 			use `temp',clear
 			
+			matrix newshapley = (newshapley \ r(mean))
+		}
+
+		if "`absorbed_FEs'"!=""{
+			// add the last row for absorbed FEs
+			reshape wide result _weight, i(`indepvars') j(absorbed)
+			gen _diff = result1-result0
+			sum _diff [iweight = _weight1]
+			use `temp',clear
 			matrix newshapley = (newshapley \ r(mean))
 		}
 		matrix newshapley = newshapley[2...,1]
@@ -406,7 +476,7 @@ if("`group'"!=""){
 			_col(40) "{c |}" //as result %6.5f _col(42) el(result,3,`i') as text _col(55) "{c |}" _col(57) as result %6.2f 100*el(result,4,`i') as text " %"
 		}		
 		//now report the contribution of the absorbed FEs, they should be in the first col since they correspond to group0
-		local varname="Absorb. FEs" 
+		local varname="Absorb. FE" 
 		di as text "`varname'" _col(12) "{c |}" as result %6.5f _col(15) el(result, 1, 1) as text _col(28) "{c |}" _col(31) as result %6.2f 100*el(result, 2, 1) as text " %" ///
 		_col(40) "{c |}" //as result %6.5f _col(42) el(result,3,`i') as text _col(55) "{c |}" _col(57) as result %6.2f 100*el(result,4,`i') as text " %"
 
@@ -428,6 +498,15 @@ else{
 		local varname=abbrev("`var'",10)
 		di as text "`varname'" _col(12) "{c |}" as result %6.5f _col(15) el(result,1,`i') as text _col(28) "{c |}" _col(31) as result %6.2f 100*el(result,2,`i') as text " %" ///
 		_col(40) "{c |}" //as result %6.5f _col(42) el(result,3,`i') as text _col(55) "{c |}" _col(57) as result %6.2f 100*el(result,4,`i') as text " %"
+	}
+
+	if "`absorbed_FEs'"!=""{
+		// add the contribution of the absorbed FEs
+		local i=`i'+1
+		local varname=abbrev("Absorb. FE",10)
+		di as text "`varname'" _col(12) "{c |}" as result %6.5f _col(15) el(result,1,`i') as text _col(28) "{c |}" _col(31) as result %6.2f 100*el(result,2,`i') as text " %" ///
+		_col(40) "{c |}" //as result %6.5f _col(42) el(result,3,`i') as text _col(55) "{c |}" _col(57) as result %6.2f 100*el(result,4,`i') as text " %"
+
 	}
 }
 di as text "{hline 11}{c +}{hline 15}{c +}{hline 11}{c +}"
