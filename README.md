@@ -27,6 +27,8 @@ net install shapley2, from("https://raw.githubusercontent.com/sultanorazbayev/sh
 
 # Changelog
 
+- Version 1.7: Adding special handling for the reghdfe command with the 'absorb' option.
+- Version 1.6: Incorporated explicit parsing of the 'if' condition in the provided command.
 - Version 1.5: It is now possible to use f. and l. factor variables as dependent variables
 - Version 1.4: Small bugfix: sometimes the program did not execute in protected working directories. Change does not affect result.
 - Version 1.3: Small bugfix: shapley2 did not work with oprobit. The fix does not affect the results. 

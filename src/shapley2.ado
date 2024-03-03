@@ -1,5 +1,5 @@
 capture program drop shapley2 
-*!version 1.6 2024-02-27
+*!version 1.7 2024-03-02
 program define shapley2 , eclass 
 version 9.2
 syntax [anything] , stat(str) [Command(str) Indepvars(str) Depvars(str) GRoup(str) MEMory FORCE Noisily]
@@ -50,6 +50,7 @@ qui{
 		// store an empty string which will not impact the estimation commands
 		local if_condition ""
 	}
+
 	
 	// CHECK THAT NO FACTOR VARIABLES ARE USED
 	local cmdline=e(cmdline)
@@ -80,7 +81,27 @@ qui{
 				gl stop=1
 			} // end else
 		} // end while
-		
+
+		//special treatment for the reghdfe command's absorb option
+		// will treat the absorbed FEs as a separate group
+		if "`command'"=="reghdfe"{
+			local absorbed_FEs: regexmatch "`e(cmdline)'" ",.*a[b]*[s]*[o]*[r]*[b]*\(([^\)]*)\)"
+			if `absorbed_FEs'!=0{
+				// there was an absorbed option provided, so recover it
+				local absorbed_FEs: regexs 1
+				local group0 `absorbed_FEs'
+			}
+			else{
+				// no absorbed option provided, store empty string for absorbed FEs
+				local absorbed_FEs ""
+			}
+		}
+		else{
+			// store an empty sting to simplify conditional logic below (if this local
+			// macro is an empty string, then can execute simple command, without
+			// any absorp options)
+			local absorbed_FEs ""	
+		}
 		
 		if(`g'<=12 & c(version)<12){ // for stata version <12, adapt matsize 
 			local newmatsize=max(2^`g'+200,c(matsize))
@@ -97,20 +118,35 @@ qui{
 
 			drop _all
 			set obs 2
-			forvalues j=1/`g'{
+
+			if "`absorbed_FEs'"!=""{
+				local starting_group_count 0
+			}
+			else{
+				local starting_group_count 1
+			}
+
+			forvalues j=`starting_group_count'/`g'{
 				gen _group`j'=1 in 1/1
 				replace _group`j'=0 in 2/2
 			}
 			fillin _group*
 			
 			local allvars ""
+			// this loop will start from 1 since group 0 involves absorbed FEs
+			// which will be handled separately
 			forvalues j=1/`g'{
 				foreach var of local group`j'{
 					gen `var'=_group`j'
 					local allvars "`allvars' `var'"
 				}
 			}
-			
+
+			// create the special column to indicate inclusion of absorbed variables
+			if "`absorbed_FEs'"!=""{
+				gen absorbed = _group0
+			}
+
 			drop _fillin
 			gen result=.
 			mkmat * , matrix(combinations) 
@@ -122,9 +158,9 @@ qui{
 		local numcomb=rowsof(combinations)
 		local numcols=colsof(combinations)
 
-			
+		// special case of no variables - 0 for the statistic of interest
 		matrix combinations[1,`numcols']=0
-				
+
 		forvalues i=2/`numcomb'{
 			local thisvars=""
 			foreach var of local allvars{
@@ -138,10 +174,26 @@ qui{
 					
 				}
 			}
-			//di "`thisvars'"
-				
-				
-			`noisily' `command' `depvar' `thisvars' `if_condition'
+
+			if "`absorbed_FEs'"==""{
+				// can assume that no absorption treatment is needed, so use the
+				// approach used in shapley version 1.5
+				`noisily' `command' `depvar' `thisvars' `if_condition'
+			}
+			else{
+				// we have some absorption logic to incorporate, so need to
+				// check if the command should include the absorbed FEs or not
+				// NOTE that right now all options apart from absorb are ignored
+				local include_absorbed = combinations[`i', "absorbed"]
+				if `include_absorbed'==1{
+					`noisily' `command' `depvar' `thisvars' `if_condition', absorb("`absorbed_FEs'")
+				}
+				else{
+					`noisily' `command' `depvar' `thisvars' `if_condition'
+				}
+
+			}	
+
 			matrix combinations[`i',`numcols']=e(`stat')
 				
 		}
@@ -272,7 +324,6 @@ qui{
 
 	/* Start computing the shapley value*/
 
-
 	if("`group'"!=""){
 		foreach var of varlist _group*{
 			local IVlist "`IVlist' `var'"
@@ -343,12 +394,32 @@ di as text  _col(12) "{c |}" "  (estimate)   " _col(23) "{c |} (estimate)" //_co
 di as text "{hline 11}{c +}{hline 15}{c +}{hline 11}{c +}" //{hline 14}{c +}{hline 13}"
 local i=0
 if("`group'"!=""){
-	forvalues j=1/`g'{
-		local i=`i'+1
-		local varname="Group `j'" 
-		di as text "`varname'" _col(12) "{c |}" as result %6.5f _col(15) el(result,1,`i') as text _col(28) "{c |}" _col(31) as result %6.2f 100*el(result,2,`i') as text " %" ///
+	// if absorbed FEs are provided, report their contribution
+	if "`absorbed_FEs'"!=""{
+		// note that because group0 contains the absorbed FEs, the other groups have to be offset by 1
+		local i=1
+		forvalues j=1/`g'{
+			local i=`i'+1
+			local varname="Group `j'" 
+			di as text "`varname'" _col(12) "{c |}" as result %6.5f _col(15) el(result,1,`i') as text _col(28) "{c |}" _col(31) as result %6.2f 100*el(result,2,`i') as text " %" ///
+			_col(40) "{c |}" //as result %6.5f _col(42) el(result,3,`i') as text _col(55) "{c |}" _col(57) as result %6.2f 100*el(result,4,`i') as text " %"
+		}		
+		//now report the contribution of the absorbed FEs, they should be in the first col since they correspond to group0
+		local varname="Group absorbed FEs" 
+		di as text "`varname'" _col(12) "{c |}" as result %6.5f _col(15) el(result, 1, 1) as text _col(28) "{c |}" _col(31) as result %6.2f 100*el(result, 2, 1) as text " %" ///
 		_col(40) "{c |}" //as result %6.5f _col(42) el(result,3,`i') as text _col(55) "{c |}" _col(57) as result %6.2f 100*el(result,4,`i') as text " %"
+
 	}
+	else{
+		// this is the same reporting as in v1.5
+		forvalues j=1/`g'{
+			local i=`i'+1
+			local varname="Group `j'" 
+			di as text "`varname'" _col(12) "{c |}" as result %6.5f _col(15) el(result,1,`i') as text _col(28) "{c |}" _col(31) as result %6.2f 100*el(result,2,`i') as text " %" ///
+			_col(40) "{c |}" //as result %6.5f _col(42) el(result,3,`i') as text _col(55) "{c |}" _col(57) as result %6.2f 100*el(result,4,`i') as text " %"
+		}
+	}
+
 }
 else{
 	foreach var of local indepvars{
@@ -368,6 +439,9 @@ if("`group'"!=""){ //display the groups
 	di as text "Groups are:"
 	forvalues j=1/`g'{
 		di as text "Group `j':" _col(10) as result "`group`j''"
+	}
+	if "`absorbed_FEs'"!=""{
+		di as text "Group absorbed FEs:" _col(10) as result "`group0'"
 	}
 }
 
