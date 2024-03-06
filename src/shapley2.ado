@@ -190,7 +190,7 @@ qui{
 					`noisily' `command' `depvar' `thisvars' `if_condition', absorb("`absorbed_FEs'")
 				}
 				else{
-					`noisily' `command' `depvar' `thisvars' `if_condition'
+					`noisily' regress `depvar' `thisvars' `if_condition'
 				}
 
 			}
@@ -305,7 +305,7 @@ qui{
 						`noisily' `command' `depvar' `thisvars' `if_condition', absorb("`absorbed_FEs'")
 					}
 					else{
-						`noisily' `command' `depvar' `thisvars' `if_condition'
+						`noisily' regress `depvar' `thisvars' `if_condition'
 					}
 
 				}
