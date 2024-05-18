@@ -1,11 +1,10 @@
-# Shapley2
+# Shapley2 modification (work in progress)
 
 SHAPLEY2: Stata module to compute additive decomposition of estimation statistics by regressors or groups of regressors
 
 Shapley2 is a post-estimation command to compute the Shorrocks-Shapley decomposition of any statistic of the model (normally the R squared). Shapley2 can be used for most estimation commands, e.g. ols, probit, logit, oprobit. Compared to the user written command shapley, shapley2 is faster and enables you to compute the Shapley value by groups of variables. The results are stored as e()-matrices, allowing the user to use them afterwards, for instance to export them to LaTeX.
 
-The original package was developed by Florian Wendelspiess Chavez Juarez.
-Starting with version 1.6, maintenance of the package is done by Sultan Orazbayev.
+The original package was developed by Florian Wendelspiess Chavez Juarez. Starting with version 1.6, maintenance of the package is done by Sultan Orazbayev.
 Additional contributions are welcome, please raise an issue or submit a pull
 request here: https://github.com/SultanOrazbayev/shapley2.
 
@@ -27,6 +26,8 @@ Installing from SSC directly (currently only for version 1.5):
 ```stata
 ssc install shapley2
 ```
+
+Please note that the current version is a work-in-progress and version 1.5 should be used for robust calculations.
 
 Installing from GitHub directly (to get the latest version):
 
